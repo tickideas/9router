@@ -34,18 +34,6 @@ services:
       - 9router_data:/app/data
     networks:
       - dokploy-network
-    labels:
-      - "traefik.enable=true"
-      # HTTP → HTTPS redirect
-      - "traefik.http.routers.9router-http.rule=Host(`${DOMAIN}`)"
-      - "traefik.http.routers.9router-http.entrypoints=web"
-      - "traefik.http.routers.9router-http.middlewares=redirect-to-https"
-      # HTTPS router
-      - "traefik.http.routers.9router-https.rule=Host(`${DOMAIN}`)"
-      - "traefik.http.routers.9router-https.entrypoints=websecure"
-      - "traefik.http.routers.9router-https.tls.certResolver=letsencrypt"
-      # Service — tell Traefik which internal port to use
-      - "traefik.http.services.9router.loadbalancer.server.port=20128"
     healthcheck:
       # /api/init returns HTTP 200 directly (no redirect)
       test: ["CMD", "wget", "-qO-", "http://localhost:20128/api/init"]
