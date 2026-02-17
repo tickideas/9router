@@ -4,10 +4,9 @@ services:
       context: .
       dockerfile: Dockerfile
     image: 9router:latest
-    container_name: 9router
     restart: unless-stopped
     ports:
-      - "${PORT:-20128}:20128"
+      - "20128"
     environment:
       # ── Required ────────────────────────────────────────────────────────────
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
@@ -26,24 +25,29 @@ services:
       AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-true}
       REQUIRE_API_KEY: ${REQUIRE_API_KEY:-false}
 
-      # ── URLs (update to your public domain) ─────────────────────────────────
+      # ── URLs ─────────────────────────────────────────────────────────────────
       BASE_URL: ${BASE_URL:-http://localhost:20128}
       NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:20128}
       CLOUD_URL: ${CLOUD_URL:-https://9router.com}
       NEXT_PUBLIC_CLOUD_URL: ${NEXT_PUBLIC_CLOUD_URL:-https://9router.com}
-
-      # ── Optional outbound proxy ──────────────────────────────────────────────
-      # HTTP_PROXY: ${HTTP_PROXY:-}
-      # HTTPS_PROXY: ${HTTPS_PROXY:-}
-      # ALL_PROXY: ${ALL_PROXY:-}
-      # NO_PROXY: ${NO_PROXY:-}
     volumes:
       - 9router_data:/app/data
     networks:
       - dokploy-network
-      - default
+    labels:
+      - "traefik.enable=true"
+      # HTTP → HTTPS redirect
+      - "traefik.http.routers.9router-http.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.9router-http.entrypoints=web"
+      - "traefik.http.routers.9router-http.middlewares=redirect-to-https"
+      # HTTPS router
+      - "traefik.http.routers.9router-https.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.9router-https.entrypoints=websecure"
+      - "traefik.http.routers.9router-https.tls.certResolver=letsencrypt"
+      # Service — tell Traefik which internal port to use
+      - "traefik.http.services.9router.loadbalancer.server.port=20128"
     healthcheck:
-      # /api/init returns HTTP 200 immediately — no redirect
+      # /api/init returns HTTP 200 directly (no redirect)
       test: ["CMD", "wget", "-qO-", "http://localhost:20128/api/init"]
       interval: 30s
       timeout: 10s
@@ -57,5 +61,3 @@ volumes:
 networks:
   dokploy-network:
     external: true
-  default:
-    driver: bridge
