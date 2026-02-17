@@ -39,8 +39,12 @@ services:
       # NO_PROXY: ${NO_PROXY:-}
     volumes:
       - 9router_data:/app/data
+    networks:
+      - dokploy-network
+      - default
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:20128/"]
+      # /api/init returns HTTP 200 immediately — no redirect
+      test: ["CMD", "wget", "-qO-", "http://localhost:20128/api/init"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -49,3 +53,9 @@ services:
 volumes:
   9router_data:
     driver: local
+
+networks:
+  dokploy-network:
+    external: true
+  default:
+    driver: bridge
