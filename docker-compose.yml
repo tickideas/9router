@@ -1,28 +1,35 @@
+# NOTE: This docker-compose.yml is provided for local development only.
+# For Dokploy deployment, use the Application type with the Dockerfile directly —
+# Dokploy's Application type auto-generates Traefik routing config, which is
+# more reliable than Docker Compose label injection.
+#
+# Required environment variables (copy .env.example to .env and fill in):
+#   JWT_SECRET, INITIAL_PASSWORD
+
 services:
   9router:
     build:
       context: .
       dockerfile: Dockerfile
-    image: 9router:latest
     restart: unless-stopped
     ports:
-      - "20128"
+      - "20128:20128"
     environment:
       JWT_SECRET: ${JWT_SECRET}
       INITIAL_PASSWORD: ${INITIAL_PASSWORD}
       NODE_ENV: production
       PORT: "20128"
       DATA_DIR: /app/data
-      API_KEY_SECRET: ${API_KEY_SECRET}
-      MACHINE_ID_SALT: ${MACHINE_ID_SALT}
-      ENABLE_REQUEST_LOGS: ${ENABLE_REQUEST_LOGS}
-      OBSERVABILITY_ENABLED: ${OBSERVABILITY_ENABLED}
-      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE}
-      REQUIRE_API_KEY: ${REQUIRE_API_KEY}
-      BASE_URL: ${BASE_URL}
-      NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL}
-      CLOUD_URL: ${CLOUD_URL}
-      NEXT_PUBLIC_CLOUD_URL: ${NEXT_PUBLIC_CLOUD_URL}
+      API_KEY_SECRET: ${API_KEY_SECRET:-}
+      MACHINE_ID_SALT: ${MACHINE_ID_SALT:-}
+      ENABLE_REQUEST_LOGS: ${ENABLE_REQUEST_LOGS:-false}
+      OBSERVABILITY_ENABLED: ${OBSERVABILITY_ENABLED:-true}
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
+      REQUIRE_API_KEY: ${REQUIRE_API_KEY:-false}
+      BASE_URL: ${BASE_URL:-http://localhost:20128}
+      NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:20128}
+      CLOUD_URL: ${CLOUD_URL:-https://9router.com}
+      NEXT_PUBLIC_CLOUD_URL: ${NEXT_PUBLIC_CLOUD_URL:-https://9router.com}
     volumes:
       - 9router_data:/app/data
     healthcheck:
