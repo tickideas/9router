@@ -307,14 +307,14 @@ export const DEFAULT_PRICING = {
 
   // Antigravity (ag) - User-provided pricing
   ag: {
-    "gemini-3-pro-low": {
+    "gemini-3.1-pro-low": {
       input: 2.00,
       output: 12.00,
       cached: 0.25,
       reasoning: 18.00,
       cache_creation: 2.00
     },
-    "gemini-3-pro-high": {
+    "gemini-3.1-pro-high": {
       input: 4.00,
       output: 18.00,
       cached: 0.50,
@@ -355,6 +355,13 @@ export const DEFAULT_PRICING = {
       cached: 0.50,
       reasoning: 37.50,
       cache_creation: 5.00
+    },
+    "gpt-oss-120b-medium": {
+      input: 0.50,
+      output: 2.00,
+      cached: 0.25,
+      reasoning: 3.00,
+      cache_creation: 0.50
     }
   },
 

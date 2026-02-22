@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./images/9router.png" alt="9Router Dashboard" width="800"/>
+  <img src="./images/9router.png?1" alt="9Router Dashboard" width="800"/>
   
   # 9Router - Free AI Router
   
@@ -207,6 +207,17 @@ Seamless translation between formats:
 - Monthly reports and insights
 - Optimize your AI spending
 
+> **💡 IMPORTANT - Understanding Dashboard Costs:**
+> 
+> The "cost" displayed in Usage Analytics is **for tracking and comparison purposes only**. 
+> 9Router itself **never charges** you anything. You only pay providers directly (if using paid services).
+> 
+> **Example:** If your dashboard shows "$290 total cost" while using iFlow models, this represents 
+> what you would have paid using paid APIs directly. Your actual cost = **$0** (iFlow is free unlimited).
+> 
+> Think of it as a "savings tracker" showing how much you're saving by using free models or 
+> routing through 9Router!
+
 ### 🌐 Deploy Anywhere
 
 - 💻 **Localhost** - Default, works offline
@@ -234,6 +245,41 @@ Seamless translation between formats:
 | | Kiro | $0 | Unlimited | Claude free |
 
 **💡 Pro Tip:** Start with Gemini CLI (180K free/month) + iFlow (unlimited free) combo = $0 cost!
+
+---
+
+### 📊 Understanding 9Router Costs & Billing
+
+**9Router Billing Reality:**
+
+✅ **9Router software = FREE forever** (open source, never charges)  
+✅ **Dashboard "costs" = Display/tracking only** (not actual bills)  
+✅ **You pay providers directly** (subscriptions or API fees)  
+✅ **FREE providers stay FREE** (iFlow, Kiro, Qwen = $0 unlimited)  
+❌ **9Router never sends invoices** or charges your card
+
+**How Cost Display Works:**
+
+The dashboard shows **estimated costs** as if you were using paid APIs directly. This is **not billing** - it's a comparison tool to show your savings.
+
+**Example Scenario:**
+```
+Dashboard Display:
+• Total Requests: 1,662
+• Total Tokens: 47M
+• Display Cost: $290
+
+Reality Check:
+• Provider: iFlow (FREE unlimited)
+• Actual Payment: $0.00
+• What $290 Means: Amount you SAVED by using free models!
+```
+
+**Payment Rules:**
+- **Subscription providers** (Claude Code, Codex): Pay them directly via their websites
+- **Cheap providers** (GLM, MiniMax): Pay them directly, 9Router just routes
+- **FREE providers** (iFlow, Kiro, Qwen): Genuinely free forever, no hidden charges
+- **9Router**: Never charges anything, ever
 
 ---
 
@@ -300,6 +346,102 @@ Combo: "openclaw-free"
 Monthly cost: $0
 Access via: WhatsApp, Telegram, Slack, Discord, iMessage, Signal...
 ```
+
+---
+
+## ❓ Frequently Asked Questions
+
+<details>
+<summary><b>📊 Why does my dashboard show high costs?</b></summary>
+
+The dashboard tracks your token usage and displays **estimated costs** as if you were using paid APIs directly. This is **not actual billing** - it's a reference to show how much you're saving by using free models or existing subscriptions through 9Router.
+
+**Example:**
+- **Dashboard shows:** "$290 total cost"
+- **Reality:** You're using iFlow (FREE unlimited)
+- **Your actual cost:** **$0.00**
+- **What $290 means:** Amount you **saved** by using free models instead of paid APIs!
+
+The cost display is a "savings tracker" to help you understand your usage patterns and optimization opportunities.
+
+</details>
+
+<details>
+<summary><b>💳 Will I be charged by 9Router?</b></summary>
+
+**No.** 9Router is free, open-source software that runs on your own computer. It never charges you anything.
+
+**You only pay:**
+- ✅ **Subscription providers** (Claude Code $20/mo, Codex $20-200/mo) → Pay them directly on their websites
+- ✅ **Cheap providers** (GLM, MiniMax) → Pay them directly, 9Router just routes your requests
+- ❌ **9Router itself** → **Never charges anything, ever**
+
+9Router is a local proxy/router. It doesn't have your credit card, can't send invoices, and has no billing system. It's completely free software.
+
+</details>
+
+<details>
+<summary><b>🆓 Are FREE providers really unlimited?</b></summary>
+
+**Yes!** Providers marked as FREE (iFlow, Kiro, Qwen) are genuinely unlimited with **no hidden charges**. 
+
+These are free services offered by those respective companies:
+- **iFlow**: Free unlimited access to 8+ models via OAuth
+- **Kiro**: Free unlimited Claude models via AWS Builder ID  
+- **Qwen**: Free unlimited access to Qwen models via device auth
+
+9Router just routes your requests to them - there's no "catch" or future billing. They're truly free services, and 9Router makes them easy to use with fallback support.
+
+**Note:** Some subscription providers (Antigravity, GitHub Copilot) may have free preview periods that could become paid later, but this would be clearly announced by those providers, not 9Router.
+
+</details>
+
+<details>
+<summary><b>💰 How do I minimize my actual AI costs?</b></summary>
+
+**Free-First Strategy:**
+
+1. **Start with 100% free combo:**
+   ```
+   1. gc/gemini-3-flash (180K/month free from Google)
+   2. if/kimi-k2-thinking (unlimited free from iFlow)
+   3. qw/qwen3-coder-plus (unlimited free from Qwen)
+   ```
+   **Cost: $0/month**
+
+2. **Add cheap backup** only if you need it:
+   ```
+   4. glm/glm-4.7 ($0.6/1M tokens)
+   ```
+   **Additional cost: Only pay for what you actually use**
+
+3. **Use subscription providers last:**
+   - Only if you already have them
+   - 9Router helps maximize their value through quota tracking
+
+**Result:** Most users can operate at $0/month using only free tiers!
+
+</details>
+
+<details>
+<summary><b>📈 What if my usage suddenly spikes?</b></summary>
+
+9Router's smart fallback prevents surprise charges:
+
+**Scenario:** You're on a coding sprint and blow through your quotas
+
+**Without 9Router:**
+- ❌ Hit rate limit → Work stops → Frustration
+- ❌ Or: Accidentally rack up huge API bills
+
+**With 9Router:**
+- ✅ Subscription hits limit → Auto-fallback to cheap tier
+- ✅ Cheap tier gets expensive → Auto-fallback to free tier
+- ✅ Never stop coding → Predictable costs
+
+**You're in control:** Set spending limits per provider in dashboard, and 9Router respects them.
+
+</details>
 
 ---
 
