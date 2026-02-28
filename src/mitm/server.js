@@ -3,15 +3,17 @@ const fs = require("fs");
 const path = require("path");
 const dns = require("dns");
 const { promisify } = require("util");
-const os = require("os");
-
 // Configuration
 const INTERNAL_REQUEST_HEADER = { name: "x-request-source", value: "local" };
-const TARGET_HOST = "daily-cloudcode-pa.googleapis.com";
+const TARGET_HOSTS = [
+  "daily-cloudcode-pa.googleapis.com",
+  "cloudcode-pa.googleapis.com"
+];
 const LOCAL_PORT = 443;
 const ROUTER_URL = "http://localhost:20128/v1/chat/completions";
 const API_KEY = process.env.ROUTER_API_KEY;
-const DB_FILE = path.join(os.homedir(), ".9router", "db.json");
+const { DATA_DIR, MITM_DIR } = require("./paths");
+const DB_FILE = path.join(DATA_DIR, "db.json");
 
 // Toggle logging (set true to enable file logging for debugging)
 const ENABLE_FILE_LOG = false;
@@ -22,7 +24,7 @@ if (!API_KEY) {
 }
 
 // Load SSL certificates
-const certDir = path.join(os.homedir(), ".9router", "mitm");
+const certDir = MITM_DIR;
 let sslOptions;
 try {
   sslOptions = {
@@ -69,15 +71,15 @@ function saveResponseLog(url, data) {
 }
 
 // Resolve real IP of target host (bypass /etc/hosts)
-let cachedTargetIP = null;
-async function resolveTargetIP() {
-  if (cachedTargetIP) return cachedTargetIP;
+const cachedTargetIPs = {};
+async function resolveTargetIP(hostname) {
+  if (cachedTargetIPs[hostname]) return cachedTargetIPs[hostname];
   const resolver = new dns.Resolver();
   resolver.setServers(["8.8.8.8"]);
   const resolve4 = promisify(resolver.resolve4.bind(resolver));
-  const addresses = await resolve4(TARGET_HOST);
-  cachedTargetIP = addresses[0];
-  return cachedTargetIP;
+  const addresses = await resolve4(hostname);
+  cachedTargetIPs[hostname] = addresses[0];
+  return cachedTargetIPs[hostname];
 }
 
 function collectBodyRaw(req) {
@@ -89,17 +91,18 @@ function collectBodyRaw(req) {
   });
 }
 
-function extractModel(body) {
-  try {
-    return JSON.parse(body.toString()).model || null;
-  } catch {
-    return null;
-  }
+// Extract model from URL path (Gemini format: /v1beta/models/gemini-2.0-flash:generateContent)
+// Fallback to body.model (OpenAI format)
+function extractModel(url, body) {
+  const urlMatch = url.match(/\/models\/([^/:]+)/);
+  if (urlMatch) return urlMatch[1];
+  try { return JSON.parse(body.toString()).model || null; } catch { return null; }
 }
 
 function getMappedModel(model) {
   if (!model) return null;
   try {
+    if (!fs.existsSync(DB_FILE)) return null;
     const db = JSON.parse(fs.readFileSync(DB_FILE, "utf-8"));
     return db.mitmAlias?.antigravity?.[model] || null;
   } catch {
@@ -108,15 +111,16 @@ function getMappedModel(model) {
 }
 
 async function passthrough(req, res, bodyBuffer) {
-  const targetIP = await resolveTargetIP();
+  const targetHost = req.headers.host || TARGET_HOSTS[0];
+  const targetIP = await resolveTargetIP(targetHost);
 
   const forwardReq = https.request({
     hostname: targetIP,
     port: 443,
     path: req.url,
     method: req.method,
-    headers: { ...req.headers, host: TARGET_HOST },
-    servername: TARGET_HOST,
+    headers: { ...req.headers, host: targetHost },
+    servername: targetHost,
     rejectUnauthorized: false
   }, (forwardRes) => {
     res.writeHead(forwardRes.statusCode, forwardRes.headers);
@@ -196,20 +200,18 @@ const server = https.createServer(sslOptions, async (req, res) => {
     return passthrough(req, res, bodyBuffer);
   }
 
-  const model = extractModel(bodyBuffer);
-  console.log(`📡 ${model} (passthrough)`);
+  const model = extractModel(req.url, bodyBuffer);
   const mappedModel = getMappedModel(model);
 
   if (!mappedModel) {
     return passthrough(req, res, bodyBuffer);
   }
 
-  console.log(`🔀 ${model} → ${mappedModel}`);
   return intercept(req, res, bodyBuffer, mappedModel);
 });
 
 server.listen(LOCAL_PORT, () => {
-  console.log(`🚀 MITM ready on :${LOCAL_PORT} → ${ROUTER_URL}`);
+  console.log(`🚀 MITM ready on :${LOCAL_PORT}`);
 });
 
 server.on("error", (error) => {

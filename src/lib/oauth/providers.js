@@ -3,6 +3,9 @@
  * Centralized DRY approach for all OAuth providers
  */
 
+// Ensure outbound fetch respects HTTP(S)_PROXY/ALL_PROXY in Node runtime
+import "open-sse/index.js";
+
 import { generatePKCE, generateState } from "./utils/pkce";
 import {
   CLAUDE_CONFIG,
@@ -258,12 +261,16 @@ const PROVIDERS = {
         "User-Agent": ANTIGRAVITY_CONFIG.loadCodeAssistUserAgent,
         "X-Goog-Api-Client": ANTIGRAVITY_CONFIG.loadCodeAssistApiClient,
         "Client-Metadata": ANTIGRAVITY_CONFIG.loadCodeAssistClientMetadata,
+        "x-request-source": "local", // MITM passthrough marker
       };
       const metadata = getOAuthClientMetadata();
 
       // Fetch user info
       const userInfoRes = await fetch(`${ANTIGRAVITY_CONFIG.userInfoUrl}?alt=json`, {
-        headers: { Authorization: `Bearer ${tokens.access_token}` },
+        headers: { 
+          Authorization: `Bearer ${tokens.access_token}`,
+          "x-request-source": "local", // MITM passthrough marker
+        },
       });
       const userInfo = userInfoRes.ok ? await userInfoRes.json() : {};
 
@@ -293,32 +300,27 @@ const PROVIDERS = {
         console.log("Failed to load code assist:", e);
       }
 
-      // Onboard user to enable Gemini Code Assist
+      // Fire-and-forget onboarding — does not block DB save
       if (projectId) {
-        try {
+        const doOnboard = async () => {
           for (let i = 0; i < 10; i++) {
-            const onboardRes = await fetch(ANTIGRAVITY_CONFIG.onboardUserEndpoint, {
-              method: "POST",
-              headers,
-              body: JSON.stringify({ tierId, metadata, cloudaicompanionProject: projectId, mode: 1 }),
-            });
-            if (onboardRes.ok) {
-              const result = await onboardRes.json();
-              if (result.done === true) {
-                // Extract final project ID from response
-                if (result.response?.cloudaicompanionProject) {
-                  const respProject = result.response.cloudaicompanionProject;
-                  projectId = typeof respProject === 'string' ? respProject.trim() : (respProject.id || projectId);
-                }
-                break;
+            try {
+              const onboardRes = await fetch(ANTIGRAVITY_CONFIG.onboardUserEndpoint, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({ tierId, metadata, cloudaicompanionProject: projectId, mode: 1 }),
+              });
+              if (onboardRes.ok) {
+                const result = await onboardRes.json();
+                if (result.done === true) break;
               }
+            } catch (e) {
+              break;
             }
-            // Wait 5 seconds before retry
             await new Promise(resolve => setTimeout(resolve, 5000));
           }
-        } catch (e) {
-          console.log("Failed to onboard user:", e);
-        }
+        };
+        doOnboard().catch(() => {});
       }
 
       return { userInfo, projectId };
@@ -763,7 +765,18 @@ const PROVIDERS = {
       if (!response.ok) return { ok: false, data: { error: "poll_failed", error_description: `Poll failed: ${response.status}` } };
       const data = await response.json();
       if (data.status === "approved" && data.token) {
-        return { ok: true, data: { access_token: data.token, _userEmail: data.userEmail } };
+        // Fetch profile to get orgId for X-Kilocode-OrganizationID header
+        let orgId = null;
+        try {
+          const profileRes = await fetch(`${config.apiBaseUrl}/api/profile`, {
+            headers: { "Authorization": `Bearer ${data.token}` }
+          });
+          if (profileRes.ok) {
+            const profile = await profileRes.json();
+            orgId = profile.organizations?.[0]?.id || null;
+          }
+        } catch {}
+        return { ok: true, data: { access_token: data.token, _userEmail: data.userEmail, _orgId: orgId } };
       }
       return { ok: false, data: { error: "authorization_pending" } };
     },
@@ -772,6 +785,7 @@ const PROVIDERS = {
       refreshToken: null,
       expiresIn: null,
       email: tokens._userEmail,
+      ...(tokens._orgId ? { providerSpecificData: { orgId: tokens._orgId } } : {}),
     }),
   },
 

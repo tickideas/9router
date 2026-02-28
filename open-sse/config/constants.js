@@ -223,6 +223,11 @@ export const PROVIDERS = {
       "Anthropic-Beta": "claude-code-20250219,interleaved-thinking-2025-05-14"
     }
   },
+  alicode: {
+    baseUrl: "https://coding.dashscope.aliyuncs.com/v1/chat/completions",
+    format: "openai",
+    headers: {}
+  },
   github: {
     baseUrl: "https://api.githubcopilot.com/chat/completions", // GitHub Copilot API endpoint for chat
     responsesUrl: "https://api.githubcopilot.com/responses",
@@ -279,16 +284,15 @@ export const PROVIDERS = {
   },
   kilocode: {
     baseUrl: "https://api.kilo.ai/api/openrouter/chat/completions",
-    format: "openrouter",
+    format: "openai",
     headers: {}
   },
   cline: {
-    baseUrl: "https://api.cline.bot/api/v1/messages",
-    format: "claude",
+    baseUrl: "https://api.cline.bot/api/v1/chat/completions",
+    format: "openai",
     headers: {
       "HTTP-Referer": "https://cline.bot",
-      "X-Title": "Cline",
-      "Anthropic-Version": "2023-06-01"
+      "X-Title": "Cline"
     },
     tokenUrl: "https://api.cline.bot/api/v1/auth/token",
     refreshUrl: "https://api.cline.bot/api/v1/auth/refresh"
